@@ -24,4 +24,4 @@ pyuic5 -x UI/app.ui -o UI/app.py
 
 ## You can download app demo
 
-<a id="raw-url" href="dist/main.exe">Download APP</a>
+<a id="raw-url" href="dist/main.exe" download>Download APP</a>

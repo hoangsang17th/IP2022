@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtGui import QImage, QPixmap, QMouseEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
-from UI.update import Ui_MainWindow
+from UI.ui import Ui_MainWindow
 from Algorithm.smoothing import Smoothings
 from Algorithm.channels import Channels
 from Algorithm.tools import Tools

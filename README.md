@@ -21,3 +21,7 @@ pyuic5 -x UI/app.ui -o UI/app.py
 ![Island image](Images/Island.png)
 
 ## Please credit the source code when you use it
+
+## You can download app demo
+
+<a id="raw-url" href="dist/main.exe">Download APP</a>

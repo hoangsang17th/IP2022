@@ -1,0 +1,1 @@
+# Bài này IP3/Tr23 Nhưng mà không biết cách lấy 1 lần được cả (r1, s1) và (r2, s2)

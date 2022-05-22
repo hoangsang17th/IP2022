@@ -2,9 +2,12 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtGui import QImage, QPixmap, QMouseEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGraphicsPixmapItem, QGraphicsScene, QFileDialog, qApp
-from UI.ui import Ui_MainWindow
+from UI.app import Ui_MainWindow
+
 from Algorithm.smoothing import Smoothings
 from Algorithm.channels import Channels
+from Algorithm.noises import Noises
+
 from Algorithm.tools import Tools
 import sys
 import os
@@ -23,6 +26,7 @@ class Main(QWidget):
         self.mwg.actionSave.triggered.connect(self.savePhoto)
         self.mwg.actionZoom_In.triggered.connect(self.on_zoom_in)
         self.mwg.actionZoom_Out.triggered.connect(self.on_zoom_out)
+        self.mwg.actionReset.triggered.connect(self.resetImage)
 
         # Tabs
         # tab 1
@@ -41,6 +45,13 @@ class Main(QWidget):
         self.mwg.sliderBilateral.valueChanged['int'].connect(
             self.bilateral_value)
 
+        # tab 3
+        self.mwg.btnNone.clicked.connect(self.radio_state)
+        self.mwg.btnMin.clicked.connect(self.radio_state)
+        self.mwg.btnMidPoint.clicked.connect(self.radio_state)
+        self.mwg.btnMax.clicked.connect(self.radio_state)
+        self.mwg.sliderContraharmonic.valueChanged['int'].connect(
+            self.contraharmonic_value)
         # Tools
         self.mwg.actionRotateLeft.triggered.connect(
             lambda: self.rotate(cv2.ROTATE_90_COUNTERCLOCKWISE))
@@ -51,13 +62,16 @@ class Main(QWidget):
         self.mwg.scrollArea.setMouseTracking(True)
 
         self.mwg.actionQuit.triggered.connect(qApp.quit)
+        self.mwg.actionQuit.triggered.connect(self.reset)
 
         self.smoothing = Smoothings()
-        self.adjust = Channels()
+        self.channel = Channels()
+        self.noise = Noises()
         self.tools = Tools()
         self.path = None
         self.img = None
         self.reset()
+        self.mwg.tabs.setHidden(True)
         self.directory = os.path.expanduser("~")
 
     def eventFilter(self, source, event):
@@ -85,12 +99,13 @@ class Main(QWidget):
         self.blue_value_now = 0
         self.gamma_value_now = 50
         self.logarit_value_now = 1
-        self.island_value_now = 0
+        self.island_value_now = 1
 
         self.blur_value_now = 0
         self.gauss_value_now = 0
         self.medi_value_now = 0
         self.bilateral_value_now = 0
+        self.contraharmonic_value_now = 0
 
         self.mwg.sliderBrightness.setValue(self.alpha_value_now)
         self.mwg.sliderGamma.setValue(self.gamma_value_now)
@@ -101,7 +116,9 @@ class Main(QWidget):
         self.mwg.sliderGaussian.setValue(self.gauss_value_now)
         self.mwg.slideMedian.setValue(self.medi_value_now)
         self.mwg.sliderBilateral.setValue(self.bilateral_value_now)
-        self.mwg.tabs.setHidden(True)
+
+        self.mwg.sliderContraharmonic.setValue(self.contraharmonic_value_now)
+        self.mwg.btnNone.setChecked(True)
 
     def loadImage(self):
         path = QFileDialog.getOpenFileName(
@@ -109,10 +126,10 @@ class Main(QWidget):
         if (path):
             self.path = path
             self.reset()
+            self.mwg.tabs.setHidden(True)
             self.image = cv2.imread(self.path)
+            self.imageOriginal = self.image
             self.setPhoto(self.image)
-            name = os.path.basename(self.path)
-            # self.mwg.statusbar.showMessage(name)
             self.mwg.tabs.setHidden(False)
 
     def setPhoto(self, image):
@@ -185,6 +202,16 @@ class Main(QWidget):
             self.bilateral_value_now = value
             self.update()
 
+    # Tab Noise
+    def radio_state(self):
+        if (self.path):
+            self.update()
+
+    def contraharmonic_value(self, value):
+        if (self.path):
+            self.contraharmonic_value_now = value
+            self.update()
+
     def on_zoom_in(self):
         if (self.path):
             scale = 1.25
@@ -195,6 +222,14 @@ class Main(QWidget):
             scale = 0.8
             self.mwg.graphicsView.scale(scale, scale)
 
+    def resetImage(self):
+        if (self.path):
+
+            self.image = self.imageOriginal
+            self.reset()
+            self.mwg.tabs.setHidden(True)
+            self.setPhoto(self.image)
+
     def rotate(self, angle):
         if (self.path):
             self.image = self.tools.rotate(self.image, angle)
@@ -204,16 +239,16 @@ class Main(QWidget):
         imgNotIsland = self.image
         # Appy các hàm bên dưới với img và imgNotIsland
         # imgNotIsland được sử dụng để khôi phục tình trạng đảo ảnh về như ban đầu
-        img = self.adjust.change_Color(
+        img = self.channel.change_Color(
             self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
-        imgNotIsland = self.adjust.change_Color(
+        imgNotIsland = self.channel.change_Color(
             self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
 
-        img = self.adjust.change_Gamma(img, self.gamma_value_now)
-        imgNotIsland = self.adjust.change_Gamma(
+        img = self.channel.change_Gamma(img, self.gamma_value_now)
+        imgNotIsland = self.channel.change_Gamma(
             imgNotIsland, self.gamma_value_now)
         # img = self.adjust.change_Logarit(img, self.logarit_value_now)
-        img = self.adjust.change_Island(
+        img = self.channel.change_Island(
             img, imgNotIsland, self.island_value_now)
 
         img = self.smoothing.change_Blur(img, self.blur_value_now)
@@ -228,6 +263,19 @@ class Main(QWidget):
         img = self.smoothing.change_Bilateral(img, self.bilateral_value_now)
         imgNotIsland = self.smoothing.change_Bilateral(
             imgNotIsland, self.bilateral_value_now)
+        # print(self.contraharmonic_value_now)
+        # img = self.noise.contraharmonicMean(img, self.contraharmonic_value_now)
+        # imgNotIsland = self.noise.contraharmonicMean(
+        #     imgNotIsland, self.contraharmonic_value_now)
+        # if (self.mwg.btnMin.isChecked()):
+        #     img = self.noise.minFilter(img)
+        #     imgNotIsland = self.noise.minFilter(imgNotIsland)
+        # elif (self.mwg.btnMidPoint.isChecked()):
+        #     img = self.noise.midpoint(img)
+        #     imgNotIsland = self.noise.midpoint(imgNotIsland)
+        # elif (self.mwg.btnMax.isChecked()):
+        #     img = self.noise.maxFilter(img)
+        #     imgNotIsland = self.noise.maxFilter(imgNotIsland)
 
         self.setPhoto(img)
 

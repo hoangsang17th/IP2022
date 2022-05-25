@@ -70,7 +70,6 @@ class Main(QWidget):
         self.noise = Noises()
         self.tools = Tools()
         self.path = None
-        self.img = None
         self.reset()
         self.mwg.tabs.setHidden(True)
         self.directory = os.path.expanduser("~")
@@ -132,6 +131,7 @@ class Main(QWidget):
             self.mwg.tabs.setHidden(True)
             self.image = cv2.imread(self.path)
             self.imageOriginal = self.image
+            self.imgNotIsland = self.image
             self.setPhoto(self.image)
             self.mwg.tabs.setHidden(False)
 
@@ -147,41 +147,57 @@ class Main(QWidget):
         self.mwg.graphicsView.setScene(scene)
 
     # Tab Channels
+    def rbg_update(self):
+        image = self.channel.change_Color(
+            self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
+        self.imgNotIsland = self.channel.change_Color(
+            self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
+        self.setPhoto(image)
 
     def alpha_value(self, value):
         if (self.path):
             self.alpha_value_now = value
-            self.update()
+            self.rbg_update()
 
     def red_value(self, value):
         if (self.path):
             self.red_value_now = value
-            self.update()
+            self.rbg_update()
 
     def green_value(self, value):
         if (self.path):
             self.green_value_now = value
-            self.update()
+            self.rbg_update()
 
     def blue_value(self, value):
         if (self.path):
             self.blue_value_now = value
-            self.update()
+            self.rbg_update()
 
     def gamma_value(self, value):
         if (self.path):
             self.gamma_value_now = value
-            self.update()
+            image = self.channel.change_Gamma(
+                self.image, self.gamma_value_now)
+            self.imgNotIsland = self.channel.change_Gamma(
+                self.image, self.gamma_value_now)
+            self.setPhoto(image)
 
     def logarit_value(self, value):
         if (self.path):
             self.logarit_value_now = value
-            self.update()
+            image = self.channel.change_Logarit(
+                self.image, self.logarit_value_now)
+            self.imgNotIsland = self.channel.change_Logarit(
+                self.image, self.logarit_value_now)
+            self.setPhoto(image)
 
     def island_value(self, value):
         if (self.path):
             self.island_value_now = value
-            self.update()
+            image = self.channel.change_Island(
+                self.image, self.imgNotIsland, self.island_value_now)
+            self.setPhoto(image)
 
     def isGamma_value(self, value):
         if (self.path):
@@ -191,22 +207,38 @@ class Main(QWidget):
     def blur_value(self, value):
         if (self.path):
             self.blur_value_now = value
-            self.update()
+            image = self.smoothing.change_Blur(
+                self.image, self.blur_value_now)
+            self.imgNotIsland = self.smoothing.change_Blur(
+                self.image, self.blur_value_now)
+            self.setPhoto(image)
 
     def gauss_value(self, value):
         if (self.path):
             self.gauss_value_now = value
-            self.update()
+            image = self.smoothing.change_Gaussian(
+                self.image, self.gauss_value_now)
+            self.imgNotIsland = self.smoothing.change_Gaussian(
+                self.image, self.gauss_value_now)
+            self.setPhoto(image)
 
     def medi_value(self, value):
         if (self.path):
             self.medi_value_now = value
-            self.update()
+            image = self.smoothing.change_Median(
+                self.image, self.medi_value_now)
+            self.imgNotIsland = self.smoothing.change_Median(
+                self.image, self.medi_value_now)
+            self.setPhoto(image)
 
     def bilateral_value(self, value):
         if (self.path):
             self.bilateral_value_now = value
-            self.update()
+            image = self.smoothing.change_Bilateral(
+                self.image, self.bilateral_value_now)
+            self.imgNotIsland = self.smoothing.change_Bilateral(
+                self.image, self.bilateral_value_now)
+            self.setPhoto(image)
 
     # Tab Noise
     def radio_state(self):
@@ -216,7 +248,11 @@ class Main(QWidget):
     def contraharmonic_value(self, value):
         if (self.path):
             self.contraharmonic_value_now = value
-            self.update()
+            image = self.noise.contraharmonicMean(
+                self.image, self.contraharmonic_value_now)
+            self.imgNotIsland = self.noise.contraharmonicMean(
+                self.image, self.contraharmonic_value_now)
+            self.setPhoto(image)
 
     def on_zoom_in(self):
         if (self.path):
@@ -242,52 +278,17 @@ class Main(QWidget):
             self.update()
 
     def update(self):
-        imgNotIsland = self.image
-        # Appy các hàm bên dưới với img và imgNotIsland
-        # imgNotIsland được sử dụng để khôi phục tình trạng đảo ảnh về như ban đầu
-        img = self.channel.change_Color(
-            self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
-        imgNotIsland = self.channel.change_Color(
-            self.image, self.red_value_now, self.green_value_now, self.blue_value_now, self.alpha_value_now)
+        if (self.mwg.btnMin.isChecked()):
+            self.image = self.noise.minFilter(self.image)
+            self.imgNotIsland = self.noise.minFilter(self.imageNotIsland)
+        elif (self.mwg.btnMidPoint.isChecked()):
+            self.image = self.noise.midpoint(self.image)
+            self.imgNotIsland = self.noise.midpoint(self.imageNotIsland)
+        elif (self.mwg.btnMax.isChecked()):
+            self.image = self.noise.maxFilter(self.image)
+            self.imgNotIsland = self.noise.maxFilter(self.imageNotIsland)
 
-        # if(self.isGamma):
-
-        #     img = self.channel.change_Gamma(img, self.gamma_value_now)
-        #     imgNotIsland = self.channel.change_Gamma(
-        #         imgNotIsland, self.gamma_value_now)
-
-        # img = self.channel.change_Logarit(img, self.logarit_value_now)
-        # imgNotIsland = self.channel.change_Logarit(
-        #     imgNotIsland, self.logarit_value_now)
-        # img = self.channel.change_Island(
-        #     img, imgNotIsland, self.island_value_now)
-
-        # img = self.smoothing.change_Blur(img, self.blur_value_now)
-        # imgNotIsland = self.smoothing.change_Blur(
-        #     imgNotIsland, self.blur_value_now)
-        # img = self.smoothing.change_Median(img, self.medi_value_now)
-        # imgNotIsland = self.smoothing.change_Median(
-        #     imgNotIsland, self.medi_value_now)
-        # img = self.smoothing.change_Gaussian(img, self.gauss_value_now)
-        # imgNotIsland = self.smoothing.change_Gaussian(
-        #     imgNotIsland, self.gauss_value_now)
-        # img = self.smoothing.change_Bilateral(img, self.bilateral_value_now)
-        # imgNotIsland = self.smoothing.change_Bilateral(
-        #     imgNotIsland, self.bilateral_value_now)
-        # img = self.noise.contraharmonicMean(img, self.contraharmonic_value_now)
-        # imgNotIsland = self.noise.contraharmonicMean(
-        #     imgNotIsland, self.contraharmonic_value_now)
-        # if (self.mwg.btnMin.isChecked()):
-        #     img = self.noise.minFilter(img)
-        #     imgNotIsland = self.noise.minFilter(imgNotIsland)
-        # elif (self.mwg.btnMidPoint.isChecked()):
-        #     img = self.noise.midpoint(img)
-        #     imgNotIsland = self.noise.midpoint(imgNotIsland)
-        # elif (self.mwg.btnMax.isChecked()):
-        #     img = self.noise.maxFilter(img)
-        #     imgNotIsland = self.noise.maxFilter(imgNotIsland)
-
-        self.setPhoto(img)
+        self.setPhoto(self.image)
 
     def savePhoto(self):
         filename = QFileDialog.getSaveFileName(

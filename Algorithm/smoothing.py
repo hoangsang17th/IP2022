@@ -7,6 +7,7 @@ class Smoothings:
         kernel_size = (value + 1, value + 1)
         img = cv2.blur(img, kernel_size)
         return img
+
     # %2 ==1 => Số lẻ và là yêu cầu đầu vào của mấy hàm bên dưới này
 
     def change_Gaussian(self, img, value):

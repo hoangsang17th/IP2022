@@ -278,15 +278,15 @@ class Main(QWidget):
             self.update()
 
     def update(self):
-        if (self.mwg.btnMin.isChecked()):
-            self.image = self.noise.minFilter(self.image)
-            self.imgNotIsland = self.noise.minFilter(self.imageNotIsland)
-        elif (self.mwg.btnMidPoint.isChecked()):
+        # if (self.mwg.btnMin.isChecked()):
+        #     self.image = self.noise.minFilter(self.image)
+        #     self.imgNotIsland = self.noise.minFilter(self.imageNotIsland)
+        if (self.mwg.btnMidPoint.isChecked()):
             self.image = self.noise.midpoint(self.image)
             self.imgNotIsland = self.noise.midpoint(self.imageNotIsland)
-        elif (self.mwg.btnMax.isChecked()):
-            self.image = self.noise.maxFilter(self.image)
-            self.imgNotIsland = self.noise.maxFilter(self.imageNotIsland)
+        # elif (self.mwg.btnMax.isChecked()):
+        #     self.image = self.noise.maxFilter(self.image)
+        #     self.imgNotIsland = self.noise.maxFilter(self.imageNotIsland)
 
         self.setPhoto(self.image)
 

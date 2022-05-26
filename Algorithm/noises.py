@@ -16,7 +16,8 @@ class Noises:
     def midpoint(self, img):
         # mask33
         mask = np.ones((3, 3), dtype="float") * (1.0 / (3 * 3))
-        m, n = img.shape
+        m = img.shape[0]
+        n = img.shape[1]
         img_new = np.zeros([m, n])
         for i in range(1, m - 1):
             for j in range(1, n - 1):
